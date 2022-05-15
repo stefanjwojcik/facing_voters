@@ -24,4 +24,5 @@ docs/site/
 Manifest.toml
 
 # Folders that contain image data --
-data/images/brazil_images_public/*
+data/images/brazil_images_public/
+*.jpg
