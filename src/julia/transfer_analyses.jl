@@ -12,9 +12,23 @@ using CSV, DataFrames
 using PyCall
 using FileIO
 using Images
+using ScikitLearn.CrossValidation: cross_val_score
+@sk_import svm: LinearSVC
 
-# CD into the images folder 
-training_images = CSV.read("images/brazil_public_training_images_names.csv", DataFrame)
+include("src/julia/utils.jl")
+impath = "images/official_images_data/"
+
+df = CSV.read("data/official_local_election_data_2016.csv", DataFrame);
+df = filter(r -> any(startswith.(["PREFEITO", "VEREADOR"], r.DS_CARGO)), df)
+
+df.imglink = map(generate_img_link, eachrow(df))
+
+# be sure to CD into the data folder 
+masc_training = CSV.read("data/masculino_training_sample.csv", DataFrame)
+fem_training = CSV.read("data/feminino_training_sample.csv", DataFrame)
+training = [masc_training; fem_training]
+# Generate labels 
+y = [repeat(["Man"], nrow(masc_training)); repeat(["Woman"], nrow(fem_training))]
 
 # LOAD IMAGES AND RESHAPE 
 py"""
@@ -57,28 +71,21 @@ resmodel(img) = py"nn_model.predict"(img)
 
 ###### TEST 
 
-example_path = "images/brazil_images_public/age46_Masc_joao-correa-psd-d.jpg"
+example_path = "images/official_images_data/"*readdir("images/official_images_data/")[1]
 pysqueeze(resmodel(pypreprocess(pyload(example_path))))
 
 ######### ITERATE AND PRODUCE PREDICTIONS  --------------
-cd("images/brazil_images_public")
-features = @showprogress [pysqueeze(resmodel(pypreprocess(pyload(x)))) for x in training_images.path ]
-features = mapreduce(permutedims, vcat, features)
-label_m_f(key) = contains(key, r"Fem") ? "Woman" : "Man";
-y = label_m_f.(training_images.path);
+cd("images/official_images_data")
+std_features = @showprogress [pysqueeze(resmodel(pypreprocess(pyload(impath * x)))) for x in training.path ]
+std_features = mapreduce(permutedims, vcat, std_features)
 
 ###### RESNET MODEL W/ SVM
 
 ## LOADING SCIKITLEARN 
-import ScikitLearn: CrossValidation
-@sk_import svm: LinearSVC
-import ScikitLearn: CrossValidation
+
 resvm = LinearSVC(C=.0001, loss="squared_hinge", penalty="l2", multi_class="ovr", random_state = 35552, max_iter=2000)
-
-# accuracy is atrocious, why is it sooo bad? when done in python, it is fine 
-RSK = RepeatedStratifiedKFold(n_splits=5, n_repeats=1, random_state=3403)
-out = cross_val_score(resvm, features, y, cv = RSK.split(features,  y))
-
+cv = ScikitLearn.CrossValidation.KFold(5000, n_folds=5, random_state = 3304, shuffle=true)
+out = cross_val_score(resvm, std_features, y, cv = cv)
 ############################################
 #                    VALIDATION 
 ############################################
@@ -100,17 +107,14 @@ nn_model_conv = Model(inputs=_.input, outputs=_.get_layer('conv5_block3_add').ou
 resmodelconv(img) = py"nn_model_conv.predict"(img)
 
 # Test example: 
-pysqueeze(resmodelconv(pypreprocess(pyload("age46_Masc_joao-correa-psd-d.jpg"))))
+pysqueeze(resmodelconv(pypreprocess(pyload(impath * readdir(impath)[1]))))
 
 # now, will take the mean of the 7*7 convolution from this layer 
 
 ######### ITERATE AND PRODUCE PREDICTIONS  --------------
-cd("images/brazil_images_public")
 feature_process(path)  = mean(pysqueeze(resmodelconv(pypreprocess(pyload(path)))), dims=(1,2))
-features = @showprogress [vcat(feature_process(x)...) for x in training_images.path ]
+features = @showprogress [vcat(feature_process(impath * x)...) for x in training.path ]
 features = mapreduce(permutedims, vcat, features)
-label_m_f(key) = contains(key, r"Fem") ? "Woman" : "Man";
-y = label_m_f.(training_images.path);
 
 ###### CONV RESNET MODEL W/ SVM - results 
 
@@ -119,8 +123,8 @@ import ScikitLearn: CrossValidation
 svm = LinearSVC(C=.0001, loss="squared_hinge", penalty="l2", multi_class="ovr", random_state = 35552, max_iter=2000)
 
 # accuracy is atrocious, why is it sooo bad? when done in python, it is fine 
-RSK = RepeatedStratifiedKFold(n_splits=5, n_repeats=1, random_state=3403)
-resnet_conv_out = cross_val_score(svm, features, y, cv = RSK.split(features,  y))
+cv = ScikitLearn.CrossValidation.KFold(5000, n_folds=5, random_state = 3304, shuffle=true)
+resnet_conv_out = cross_val_score(svm, features, y, cv = cv)
 
 
 ######################### 
@@ -139,34 +143,29 @@ vgg_model = Model(inputs=_.input, outputs=_.get_layer('fc2').output)
 vggmodel(img) = py"vgg_model.predict"(img)
 
 # Test example: 
-pysqueeze(vggmodel(pypreprocess(pyload("age46_Masc_joao-correa-psd-d.jpg"))))
+pysqueeze(vggmodel(pypreprocess(pyload(impath * readdir(impath)[1]))))
 
 # now, will take the mean of the 7*7 convolution from this layer 
 
 ######### ITERATE AND PRODUCE PREDICTIONS  --------------
-cd("images/brazil_images_public")
 feature_process(path)  = pysqueeze(vggmodel(pypreprocess(pyload(path))))
-features = @showprogress [feature_process(x) for x in training_images.path ]
+features = @showprogress [feature_process(impath * x) for x in training.path ]
 features = mapreduce(permutedims, vcat, features)
-label_m_f(key) = contains(key, r"Fem") ? "Woman" : "Man";
-y = label_m_f.(training_images.path);
-
-###### CONV RESNET MODEL W/ SVM
 
 ## LOADING SCIKITLEARN 
 import ScikitLearn: CrossValidation
 svm = LinearSVC(C=.0001, loss="squared_hinge", penalty="l2", multi_class="ovr", random_state = 35552, max_iter=2000)
 
 # accuracy is atrocious, why is it sooo bad? when done in python, it is fine 
-RSK = RepeatedStratifiedKFold(n_splits=5, n_repeats=1, random_state=3403)
-vgg_out = cross_val_score(svm, features, y, cv = RSK.split(features,  y))
+cv = ScikitLearn.CrossValidation.KFold(5000, n_folds=5, random_state = 3304, shuffle=true)
+vgg_out = cross_val_score(svm, features, y, cv = cv)
 
 ############################################
 ##### FEATURE EXPLORATION WITH THE EXAMPLE DATA 
 ####################################################
 
 # flow: load images in julia - 
-example_path = "images/brazil_images_public/age46_Masc_joao-correa-psd-d.jpg"
+example_path = impath*readdir(impath)[1]
 im = load(example_path);
 rawimg = channelview(im);
 # get the number of divisions by 5
@@ -185,13 +184,6 @@ function noisemask!(rawimg, hzontal, vert, kernelsize)
     rawimg[vert:vert+kernelsize, hzontal:hzontal+kernelsize] .= rand(kernelsize+1, kernelsize+1)
 end
 
-# convert and save the noised image 
-function convert_and_save(rawimg)
-    tempfile = tempname()
-    save(tempfile*".png", Gray.(rawimg))
-    return(tempfile*".png")
-end
-
 ########
 rawimg_orig = deepcopy(rawimg)
 
@@ -201,9 +193,10 @@ rawimg_orig = deepcopy(rawimg)
 resmodel(img) = py"nn_model.predict"(img)
 @sk_import calibration: CalibratedClassifierCV
 calsvm = CalibratedClassifierCV(resvm)
-calsvm.predict_proba(features)
+calsvm.fit(std_features, y)
+calsvm.predict_proba(std_features)
 # TEST prediction on one example at a time 
-calsvm.predict_proba(reshape(features[1, :], (1, 2048)))
+calsvm.predict_proba(reshape(std_features[1, :], (1, 2048)))
 
 # create masking prediction model:
 function mask_analysis(raw_img, kernel_size, calsvm)
@@ -250,10 +243,14 @@ end
 #paint!(rawimg, preds, 5, .001)
 
 ## Paint the four representative images 
-maf = mask_viz(load("most_ambiguous_female_alessandra-amatto-d.jpg"), 5, calsvm, .9) 
 
-mam = mask_viz(load("most_ambiguous_male_acelmo-assuncao-d.jpg"), 5, calsvm, .9) 
+#load(df.imglink[findall(x -> contains.(x, r"CLAUDIO OCOZIAS"), df.NM_URNA_CANDIDATO)][1])
 
-mfw = mask_viz(load("most_feminine_woman_simone-xucra-d.jpg"), 5, calsvm, .9) 
-
-mmm = mask_viz(load("most_masculine_man_claudio-ocozias-d.jpg"), 5, calsvm, .9) 
+# Alessandra Amatto
+maf = mask_viz(load("images/official_images_data/MG-53970-130000012523-128169510264.jpg"), 5, calsvm, .9) 
+# Acelmo Assuncao
+mam = mask_viz(load("images/official_images_data/MG-48950-130000075502-197497290221.jpg"), 5, calsvm, .9) 
+# Simone Xucra
+mfw = mask_viz(load("images/official_images_data/MS-90034-120000005513-018097691937.jpg"), 5, calsvm, .9) 
+# Claudio Ocozias
+mmm = mask_viz(load("images/official_images_data/GO-93718-90000012258-014291981031.jpg"), 5, calsvm, .9) 

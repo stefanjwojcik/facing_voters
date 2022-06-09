@@ -1,4 +1,4 @@
-## Store all data locally 
+## Store all image data locally 
 # This script can be run non-interactively. 
 
 using AWSS3
