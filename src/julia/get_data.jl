@@ -6,7 +6,7 @@ using AWS
 using ProgressMeter
 
 # base directory path 
-base_dir_path = pwd()
+base_dir_path = pwd() # should be something like: "~/some_projects_folder/facing_voters"
 
 # ask to initialize download 
 function promptdata()
@@ -73,8 +73,6 @@ if download_data
 
     cd(base_dir_path) # back to base
     cd(abspath("data")) # to data path
-
-    data_to_recover = ["official_local_election_data_2016.csv", ""]
 
     if "official_local_election_data_2016.csv" ∉ readdir()
         read(`aws s3api get-object --bucket brazil.features --key official_local_election_data_2016.csv official_local_election_data_2016.csv`, String)
