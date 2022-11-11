@@ -1,4 +1,5 @@
-# running models
+# Produces the data for the regression analysis: "data_for_regression.csv"
+# Draws on official election data, candidate data, and GCS scores 
 
 using CSV, DataFrames, MixedModels, Effects, DataStructures 
 include("src/julia/utils.jl")
