@@ -23,7 +23,7 @@ docs/site/
 # environment.
 Manifest.toml
 
-# Folders that contain image data --
-data/
-images/
+# Folders that contain image data -- these data get downloaded with get_data.jl
+images/brazil_images_public/
+images/official_images_data/
 #*.jpg
