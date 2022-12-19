@@ -22,3 +22,8 @@ images (contains brazil_public_testing_image_names.csv and brazil_public_trainin
 
 
 ## RUN ANALYSIS SCRIPT - PRODUCE FINAL TABLES AND FIGURES 
+
+
+## CONDITIONS OF DATA USAGE 
+
+We make our data available under the condition that researchers not use it to train demographic classifiers of any kind. This includes models that attempt to infer characteristics like age, race, or gender.We make our data available under the condition that researchers not use it to train demographic classifiers of any kind. This includes models that attempt to infer characteristics like age, race, or gender.
