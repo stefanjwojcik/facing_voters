@@ -4,11 +4,13 @@ library(dplyr)
 library(ggplot2)
 library(lme4)
 library(readr)
+library(stargazer)
+library(effects)
 #library(JuliaCall)
 #julia <- julia_setup()
 
 # load the official data 
-offd = read_csv("/../../data/data_for_regression.csv")
+offd = read_csv("../../data/data_for_regression.csv")
 offd$race = factor(offd$DS_COR_RACA, labels = unique(offd$DS_COR_RACA)[c(2, 1, 3, 4, 5)])
 
 offd %>% mutate(pred_gender = fem_body <= .5) %>% summarise( sum(pred_gender == (Gender=="Men"), na.rm=T)/n())
@@ -32,8 +34,9 @@ g = g + geom_line(data = effdf[effdf$Gender=="Women", ], aes(y = exp(fit), x=sca
 g = g + geom_ribbon(data = effdf[effdf$Gender=="Men", ], aes(ymin=exp(lower), ymax=exp(upper), x=scaled_fem_body, fill = "band"), alpha = 0.3, fill = "#BF3B27")
 g = g + geom_line(data = effdf[effdf$Gender=="Men", ], aes(y = exp(fit), x=scaled_fem_body), alpha = 0.3, col = "#BF3B27")
 g = g + geom_rug(data = subset(offd, DS_CARGO=="VEREADOR"), aes(x = scaled_fem_body, y=exp(logpct), col= Gender)) 
-g = g + xlab("Conformity Score (low to high)") + ylab("Est. Proportion of Vote") + ggtitle("Effect of GCS on Vote Share - City Council Elections") + ylim(0, .2)
-g
+g = g + xlab("Conformity Score (low to high)") + ylab("Est. Proportion of Vote") #+ ggtitle("Effect of GCS on Vote Share - City Council Elections") 
+g = g + ylim(0, .2)
+g + theme_minimal()
 
 # INTERPRETATION: VOTE CHANGE For Women
 # effect from middle to end
@@ -82,8 +85,8 @@ g = g + geom_line(data = effdf[effdf$Gender=="Women", ], aes(y = exp(fit), x=sca
 g = g + geom_ribbon(data = effdf[effdf$Gender=="Men", ], aes(ymin=exp(lower), ymax=exp(upper), x=scaled_fem_body, fill = "band"), alpha = 0.3, fill = "#BF3B27")
 g = g + geom_line(data = effdf[effdf$Gender=="Men", ], aes(y = exp(fit), x=scaled_fem_body), alpha = 0.3, col = "#BF3B27")
 g = g + geom_rug(data = offd, aes(x = scaled_fem_body, y=exp(logpct), col= Gender)) #+ ylim(0, .75)
-g = g + xlab("Conformity Score (low to high)") + ylab("Est. Proportion of Vote") + ggtitle("Effect of GCS on Vote Share - Mayoral Elections")
-g
+g = g + xlab("Conformity Score (low to high)") + ylab("Est. Proportion of Vote") #+ ggtitle("Effect of GCS on Vote Share - Mayoral Elections")
+g + theme_minimal()
 
 # INTERPRETATION: VOTE CHANGE For Women
 # effect from middle to end
@@ -108,4 +111,23 @@ amb_mas = exp(effdf$fit[which(effdf$scaled_fem_body==0 & effdf$Gender=="Men")])
 mas_mas = exp(effdf$fit[which(effdf$scaled_fem_body==1 & effdf$Gender=="Men")])
 #(mas_mas - amb_mas)
 ((mas_mas - amb_mas)/amb_mas)*100
+
+###### TABLES OF GCS SCORES BY RACE 
+
+race_refactor = function(x) (case_when( x == "BRANCA" ~ "White", 
+                                        x == "PARDA" ~ "Mixed", 
+                                        x == "PRETA" ~ "Black", 
+                                        x == "INDÍGENA" ~ "Indigenous", 
+                                        x == "AMARELA" ~ "Asian"))
+# GRAPH OF GCS BY RACE AND GENDER
+offd %>%
+  group_by(race, Gender) %>%
+  summarise(GCS = mean(fem_body)) %>%
+  ungroup() %>%
+  mutate_at(c("race"), race_refactor) %>%
+  mutate(race = fct_reorder(race, desc(GCS))) %>%
+  ggplot(aes(x=race, y=GCS, col=Gender )) + geom_point(size=2) + geom_line(aes(group=race), col="dark grey") +
+  theme_minimal() + ylim(0, 1) + xlab("Self-identified Candidate Race") + 
+  geom_text(aes(label=round(GCS, digits=2)),hjust=0,vjust=0)
+
 

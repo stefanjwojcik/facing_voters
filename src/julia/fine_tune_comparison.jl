@@ -6,62 +6,93 @@ using Flux
 using Flux: @epochs
 using StatsBase
 using Statistics
-include("dataloader.jl")
+using ProgressMeter
 
-# load the model 
-nn_model = GoogleNet().layers[1:19]
-neurons = size(nn_model(rand(Float32, 224, 224, 3, 1)))[1]
+## Adding the data-loading utilities 
+if !isfile("fine_tune_dataloader.jl")
+    include("src/julia/fine_tune_dataloader.jl")
+else 
+    include("fine_tune_dataloader.jl")
+end
 
-## 
-model = Chain(
-  GoogleNet().layers[1:end-2],
-  Dense(neurons, 1000),  
-  Dense(1000, 256),
-  Dense(256, 2),        # we get 2048 features out, and we have 2 classes
-)
+# to reclaim gpu memory 
+#GC.gc(true); CUDA.reclaim(); 
+CUDA.allowscalar(false)
 
-# Testing to get probabilities
-model(rand(Float32, 224, 224, 3, 1))
+# Load and prepare the paths to the source images
+masc_imgs = load_paths("data/masculino_training_sample.csv", "path")
+fem_imgs = load_paths("data/feminino_training_sample.csv", "path")
 
-# send model to GPU 
-model = model |> gpu
-dataset = [gpu.(load_batch(10)) for i in 1:10]
+# Load the ResNet model as a pre-trained model
+resnet = ResNet(50; pretrain = true)
+nn_model = Chain(
+  resnet.layers[1],
+  resnet.layers[2][1:end-1],
+) |> gpu 
+
+# This is basically 100x faster with the GPU 
+masc_features = @showprogress [nn_model(normalize(load(x), (224, 224)) |> gpu) for x in masc_imgs] 
+fem_features = @showprogress [nn_model(normalize(load(x), (224, 224)) |> gpu) for x in fem_imgs] 
+cmasc_features = cpu(masc_features);
+cfem_features = cpu(fem_features);
+masc_features = nothing; fem_features = nothing; # reclaim memory
+
+# Assign earlier model to nothing and garbage collect
+resnet = nothing
+nn_model = nothing
+GC.gc(true); CUDA.reclaim();
+
+#### Create a minor neural network on top of the resnet features 
+# This is a simple 2 layer neural network
+top_model = Chain(
+  Dense(2048, 512, relu),
+  Dense(512, 2),
+  softmax
+) |> gpu
+
+## Create training and validation sets
+train_size = round(Int, 0.8 * size(cmasc_features, 1))
+test_size = size(cmasc_features, 1) - train_size
+
+# Combine the data into a single array
+
+## TRAINING
+tr_embeddings = hcat(hcat(cmasc_features[1:train_size]...), hcat(cfem_features[1:train_size]...))
+tr_labels = Flux.onehotbatch(repeat([0, 1], inner=train_size), [0,1])
+# TESTING 
+te_embeddings = hcat(hcat(cmasc_features[train_size+1:end]...), hcat(cfem_features[train_size+1:end]...))
+te_labels = Flux.onehotbatch(repeat([0, 1], inner=test_size), [0,1])
+
+# dataset
+dataset = [(tr_embeddings, tr_labels)]
 
 # Define loss functions 
 opt = ADAM()
-loss(x,y) = Flux.Losses.logitcrossentropy(model(x), y)
-accuracy(x, y) = Statistics.mean(Flux.onecold(model(x)) .== Flux.onecold(y))
+loss(x,y) = Flux.Losses.logitcrossentropy(top_model(x), y)
+accuracy(x, y) = Statistics.mean(Flux.onecold(top_model(x)) .== Flux.onecold(y))
 
-# Define trainable parameters - just the tip 
-ps = Flux.params(model[2:end])
+# Define trainable parameters - just the top 
+ps = Flux.params(top_model)
 
 # Train for two epochs 
-@epochs 2 Flux.train!(loss, ps, dataset, opt)
-
-# SHOW THE RESULTS 
-imgs, labels = gpu.(load_batch(10))
-display(model(imgs))
-
-labels
 
 ############
 
-(m, n) = size(xtrain)
-
 # Train the model over 100_000 epochs
 for epoch in 1:1000
-    # Randomly select a entry of training data 
-    dataset = [gpu.(load_batch(10)) for x in 1:10]
-    xt, yt = dataset[1]
-
     # Implement Stochastic Gradient Descent 
-    Flux.train!(loss, ps, dataset, opt)
+    Flux.train!(loss, ps, dataset |> gpu, opt)
+
+    # stop if the training accuracy is greater than testing accuracy
+    if accuracy(tr_embeddings |> gpu, tr_labels |> gpu) > accuracy(te_embeddings |> gpu, te_labels |> gpu) + 0.02
+        break
+    end
 
     # Print loss function values 
     if epoch % 10 == 0
-        println("Epoch: $(epoch)")
-        @show loss(xt, yt)
-        @show accuracy(xt, yt)
+        println("Epoch: $(epoch) Validation Results")
+        @show loss(te_embeddings |> gpu, te_labels |> gpu)
+        @show accuracy(te_embeddings |> gpu, te_labels |> gpu)
         println()
     end
 end
