@@ -21,6 +21,7 @@ impath = "images/official_images_data/"
 df = CSV.read("data/official_local_election_data_2016.csv", DataFrame);
 df = filter(r -> any(startswith.(["PREFEITO", "VEREADOR"], r.DS_CARGO)), df)
 
+# puts together info for each candidate to create the path of the image
 df.imglink = map(generate_img_link, eachrow(df))
 
 # be sure to CD into the data folder 
@@ -58,9 +59,9 @@ pysqueeze(predictions) = py"np.squeeze"(predictions)
 # RESNET - MAIN RESULTS 
 ###################################
 py"""
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.vgg19 import preprocess_input
-from tensorflow.keras.models import Model
+#from tensorflow.keras.preprocessing import image
+#from tensorflow.keras.applications.vgg19 import preprocess_input
+#from tensorflow.keras.models import Model
 from tensorflow.keras.applications.resnet50 import ResNet50
 # py"ResNet50(weights='imagenet').summary()" get the names 
 _ = ResNet50(weights='imagenet')
@@ -75,7 +76,7 @@ example_path = "images/official_images_data/"*readdir("images/official_images_da
 pysqueeze(resmodel(pypreprocess(pyload(example_path))))
 
 ######### ITERATE AND PRODUCE PREDICTIONS  --------------
-cd("images/official_images_data")
+#cd("images/official_images_data")
 std_features = @showprogress [pysqueeze(resmodel(pypreprocess(pyload(impath * x)))) for x in training.path ]
 std_features = mapreduce(permutedims, vcat, std_features)
 

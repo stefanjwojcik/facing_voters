@@ -77,7 +77,7 @@ calsvm.fit(features, y)
 # Merging of probabilities and training 
 #probs = DataFrame(probs = probs[:, 2], path = training_images.path)
 
-## RUNNING ON THE FULL SAMPLE: 
+## RUNNING ON THE FULL SAMPLE: TAKES A LONG TIME! 
 
 getfeatures(x) = pysqueeze(resmodel(pypreprocess(pyload(x))))
 calib_svm_pred(x) = calsvm.predict_proba(reshape(getfeatures(x), (1,2048)))[2]
@@ -90,7 +90,10 @@ end
 
 body_out = DataFrame(imglink = readdir(impath), fem_body = fem_body)
 CSV.write("data/fem_body_officialV2.csv", body_out)
+
+#############################################
 ######### Estimates with face locations 
+###############################
 
 face_locs = CSV.read("data/official_face_coords.csv", DataFrame)
 

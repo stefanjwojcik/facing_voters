@@ -6,12 +6,12 @@ using AWS
 using ProgressMeter
 
 # base directory path 
-base_dir_path = pwd()
+base_dir_path = pwd() # should be something like: "~/some_projects_folder/facing_voters"
 
 # ask to initialize download 
 function promptdata()
     inp = ""
-    println("Initiate data download? Y/N")
+    println("This script will download more than 2GB of data. Initiate data download? Y/N")
     inp = readline()
     while inp ∉ ["Y", "N"]
         inp = promptdata()
@@ -61,5 +61,39 @@ if download_data
 
     cd(base_dir_path) #back to base 
 
-    println("Done. Data now available")
+    println("Done. Image Data now available")
+
+    #### DONE WITH IMAGE DATA, NOW GET VOTING RESULTS 
+
+    println("Getting Voting Data....")
+
+    if not isdir(abspath("data"))
+        mkdir(abspath("data"))
+    end
+
+    cd(base_dir_path) # back to base
+    cd(abspath("data")) # to data path
+
+    if "official_local_election_data_2016.csv" ∉ readdir()
+        read(`aws s3api get-object --bucket brazil.features --key official_local_election_data_2016.csv official_local_election_data_2016.csv`, String)
+    end
+
+    if "masculino_training_sample.csv" ∉ readdir()
+        read(`aws s3api get-object --bucket brazil.features --key masculino_training_sample.csv masculino_training_sample.csv`, String)
+    end
+
+    if "feminino_training_sample.csv" ∉ readdir()
+        read(`aws s3api get-object --bucket brazil.features --key feminino_training_sample.csv feminino_training_sample.csv`, String)
+    end
+
+    if "votacao_candidato_munzona_2016_BRASIL.csv" ∉ readdir()
+        read(`aws s3api get-object --bucket brazil.features --key votacao_candidato_munzona_2016_BRASIL.csv votacao_candidato_munzona_2016_BRASIL.csv`, String)
+    end
+
+    if "fem_face_officialV2.csv" ∉ readdir()
+        read(`aws s3api get-object --bucket brazil.features --key fem_face_officialV2.csv fem_face_officialV2.csv`, String)
+    end
+
+    println("Done. All Data Downloaded Successfully.")
+    
 end
