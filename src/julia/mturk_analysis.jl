@@ -79,7 +79,7 @@ R"irr::kappa2(dplyr::select(df_c, l1, l2))$value"
 
 ## join the official gcs scores with the mturk data
 
-offd = CSV.read("/home/swojcik/github/facing_voters_w_data/data/data_for_regression.csv", DataFrame, silencewarnings=true) |> 
+offd = CSV.read("/home/swojcik/github/facing_voters/data/data_for_regression.csv", DataFrame, silencewarnings=true) |> 
     (data -> rightjoin(data, df, on=[:imglink => :image_url])) |> 
     (data -> DataFrames.select(data, :imglink, :fem_body, :fem_face, :l1, :l2, :l3))
 

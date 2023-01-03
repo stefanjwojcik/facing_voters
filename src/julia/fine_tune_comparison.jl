@@ -1,4 +1,5 @@
-# Fine-tuning a model in JUlia
+# Fine-tuning a model in Julia. 
+# Takes the ResNet pretrained model and uses that as a base model to create an alternative conformity score 
 
 using CUDA
 using Metalhead
@@ -33,7 +34,7 @@ nn_model = Chain(
 # This is basically 100x faster with the GPU 
 masc_features = @showprogress [nn_model(normalize(load(x), (224, 224)) |> gpu) for x in masc_imgs] 
 fem_features = @showprogress [nn_model(normalize(load(x), (224, 224)) |> gpu) for x in fem_imgs] 
-cmasc_features = cpu(masc_features);
+cmasc_features = cpu(masc_features); #moves features to CPU and reclaims space
 cfem_features = cpu(fem_features);
 masc_features = nothing; fem_features = nothing; # reclaim memory
 

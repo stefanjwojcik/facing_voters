@@ -8,7 +8,7 @@ using FileIO
 using Images, ImageView
 
 # change working directory to source file location 
-cd(@__DIR__)
+#cd(@__DIR__)
 
 py"""
 import keras.backend as K
@@ -20,8 +20,11 @@ from tensorflow.keras.applications.resnet50 import ResNet50
 import scipy
 # py"ResNet50(weights='imagenet').summary()" get the names 
 resmodel = ResNet50(weights='imagenet')
+def get_resnet_embedding_model(model):
+    Model(inputs=model.input, outputs=model.get_layer('avg_pool').output)
 
 """
+resmodel = py"resmodel"
 
 # LOAD IMAGES AND RESHAPE 
 py"""
@@ -43,7 +46,7 @@ def get_img(impath):
     usage:
         basepath = os.getcwd()+"/images/brazil_images_public"
         impath = os.listdir(basepath)[1]
-        get_example_img(basepath+"/"+impath)
+        get_img(basepath+"/"+impath)
     '''
     img = pyload(impath)
     img = pypreprocess(img)
@@ -68,14 +71,9 @@ def get_class_activation_map(model, img):
         1) model (tensorflow model) : trained model
         2) img (numpy array of shape (224, 224, 3)) : input image
     '''
-    
-    # predict to get the winning class
-    predictions = model.predict(img)
-    label_index = np.argmax(predictions)
-    
     # Get the 2048 input weights to the softmax of the winning class.
-    class_weights = model.layers[-1].get_weights()[0]
-    class_weights_winner = class_weights.max(axis=1)
+    nn_model = Model(inputs=model.input, outputs=model.get_layer('avg_pool').output)
+    class_weights_winner = nn_model.predict(img)[0]
     
     # get the final conv layer
     final_conv_layer = model.get_layer("conv5_block3_out")
@@ -100,17 +98,28 @@ def get_class_activation_map(model, img):
 get_class_activation_map(model, img) = py"get_class_activation_map"(model, img)
 
 # Class Activation Paint Images - feed class activation into an image 
-function cam_paint(img_array, cam)
-    channeled_img = permutedims(img_array[1, :, :, :], (3,1,2)) / 255.0
+function cam_paint(img, cam)
+    # channelview of image 
+    channeled_img = channelview(RGB.(Gray.(img)))
+    # cam reshaped
+    cam_reshaped = imresize(cam, size(channeled_img)[2:3])
     channeled_img[1, :, :] .= 0.0
-    channeled_img[1, :, :] = 1.0 .* (cam .>= mean(cam) + std(cam)/4 )
+    channeled_img[1, :, :] = 1.0 .* cam_reshaped .> median(cam_reshaped)
     colorview(RGB, channeled_img)
 end
 
-# get the class activation map and paint it on the image
-function cam_paint(img::String, model, threshold)
-    img_array = get_img(img)
-    cam = get_class_activation_map(model, img_array)
-    cam[cam .< threshold] .= 0.0
-    cam_paint(img_array, cam)
+# Class Activation Paint Images - feed class activation into an image 
+function cam_heat(img, cam)
+    # channelview of image 
+    channeled_img = channelview(Gray.(img))
+    # cam reshaped
+    cam_reshaped = imresize(cam, size(channeled_img))
+    out = (channeled_img .+ cam_reshaped/max(cam...))'
+    return out
 end
+
+############## END CODE HERE 
+
+### EXAMPLES 
+
+#img = load("../../images/most_ambiguous_female_alessandra-amatto-d.jpg")

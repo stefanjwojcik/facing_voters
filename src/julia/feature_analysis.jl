@@ -1,4 +1,5 @@
-# Feature analysis:
+# Feature analysis: This is an alternative to the class-mapping approach - not ultimately going to be included in paper
+# TODO: generate a vector that calculates the difference between the non-noised image and each noised version
 
 using CUDA
 using Metalhead
@@ -124,6 +125,24 @@ function mask_analysis(raw_img, kernel_size, calsvm)
         preds = calsvm.predict_proba(reshape(features, (1, 2048)))[2] #prob of W
         relpreds = rel_certainty(preds)
         push!(pred_graph, (x,y, relpreds))
+    end
+    return pred_graph
+end
+
+# adds comparison with the original image prediction 
+function mask_analysis_w_comparison(raw_img, kernel_size, calsvm)
+    coords = maskiterators(raw_img, kernel_size)
+    pred_graph = Tuple[]
+    ordinary_features = pysqueeze(resmodel(pypreprocess(pyload(convert_and_save(raw_img)))))
+    ordinary_pred = calsvm.predict_proba(reshape(ordinary_features, (1, 2048)))[2]
+    @showprogress for (x,y) in coords
+        # copy source image
+        imgcopy = deepcopy(raw_img)
+        noisemask!(imgcopy, x, y, kernel_size)
+        tf = convert_and_save(imgcopy)
+        features =  pysqueeze(resmodel(pypreprocess(pyload(tf))))
+        preds = ordinary_pred - calsvm.predict_proba(reshape(features, (1, 2048)))[2] #prob of W
+        push!(pred_graph, (x,y, preds))
     end
     return pred_graph
 end

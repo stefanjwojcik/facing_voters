@@ -16,6 +16,14 @@ offd$race = factor(offd$DS_COR_RACA, labels = unique(offd$DS_COR_RACA)[c(2, 1, 3
 offd %>% mutate(pred_gender = fem_body <= .5) %>% summarise( sum(pred_gender == (Gender=="Men"), na.rm=T)/n())
 offd %>% mutate(pred_gender = fem_face <= .5) %>% summarise( sum(pred_gender == (Gender=="Men"), na.rm=T)/n())
 
+
+# HISTOGRAM 
+p = ggplot(offd, aes(x=scaled_fem_body, fill=Gender)) + geom_histogram(aes(color=Gender), bins=100, alpha=0.5) + 
+  geom_vline(aes(xintercept = .5), linetype = "dashed", alpha = .5) +
+  facet_grid(~Gender) + 
+  ylab("Density") + 
+  xlab("Conformity Score") + theme_minimal()
+
 # LOW Information Elections: VEREADOR MODEL
 # face model
 mod_vereador_face = lmer(logpct ~ scaled_fem_face*Gender + race + NR_IDADE_DATA_POSSE + SG_PARTIDO + ST_REELEICAO + (1|str_CD_MUNICIPIO), data = subset(offd, DS_CARGO=="VEREADOR"))
@@ -52,8 +60,8 @@ fem_fem = exp(effdf$fit[which(effdf$scaled_fem_body==1 & effdf$Gender=="Women")]
 
 # INTERPRETATION: VOTE CHANGE For Men
 # effect from middle to end
-amb_mas = exp(effdf$fit[which(effdf$scaled_fem_body==.5 & effdf$gender=="Men")])
-mas_mas = exp(effdf$fit[which(effdf$scaled_fem_body==1 & effdf$gender=="Men")])
+amb_mas = exp(effdf$fit[which(effdf$scaled_fem_body==.5 & effdf$Gender=="Men")])
+mas_mas = exp(effdf$fit[which(effdf$scaled_fem_body==1 & effdf$Gender=="Men")])
 #(mas_mas - amb_mas)
 ((mas_mas - amb_mas)/amb_mas)*100
 # effect from end to end
@@ -111,6 +119,16 @@ amb_mas = exp(effdf$fit[which(effdf$scaled_fem_body==0 & effdf$Gender=="Men")])
 mas_mas = exp(effdf$fit[which(effdf$scaled_fem_body==1 & effdf$Gender=="Men")])
 #(mas_mas - amb_mas)
 ((mas_mas - amb_mas)/amb_mas)*100
+
+################ 
+# MODELS WITH EDUCATION INCLUDED
+############################
+
+mod_vereador_body_edu = lmer(logpct ~ scaled_fem_body*Gender + race + NR_IDADE_DATA_POSSE + DS_GRAU_INSTRUCAO +  SG_PARTIDO + ST_REELEICAO + (1|str_CD_MUNICIPIO), data = subset(offd, DS_CARGO=="VEREADOR"))
+
+mod_pref_body_edu = lmer(logpct ~ scaled_fem_body*Gender + race + NR_IDADE_DATA_POSSE + DS_GRAU_INSTRUCAO+ SG_PARTIDO + ST_REELEICAO + (1|str_CD_MUNICIPIO), data = subset(offd, DS_CARGO=="PREFEITO"))
+
+stargazer(mod_vereador_body_edu, mod_pref_body_edu, title = "Education Models", omit = "^SG_PARTIDO", star.cutoffs = c(0.05, 0.01, 0.001))
 
 ###### TABLES OF GCS SCORES BY RACE 
 
