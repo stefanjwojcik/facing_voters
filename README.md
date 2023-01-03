@@ -1,17 +1,24 @@
 # Facing Voters: Gender Expression, Gender Stereotypes, and Vote Choice
 Replication of scientific findings of the paper entitled "Facing Voters: Gender Expression, Gender Stereotypes, and Vote Choice"
 
-## Replicating Regression Results: 
+## Replicating Main Paper Results: 
 
-- Figure 1: Histogram of GCS scores (see [official_analysis.R](src/R/official_analysis.R)
-- Figure 2: 
-- Figure 3: 
-- Figure 4: 
+- Figure 1: Histogram of GCS scores - [official_analysis.R](src/R/official_analysis.R)
+- Figure 2: Feature mapping of images - [class_activation_maps.jl](src/julia/class_activation_maps.jl)
+- Figure 3: Effect of GCS in high information elections - [official_analysis.R](src/R/official_analysis.R)
+- Figure 4: Effect of GCS in low information elections - [official_analysis.R](src/R/official_analysis.R)
 
-- Table 1: 
-- Table 2: 
-- Table 3: 
+- Table 1: Cross-validated accuracy scores [train_base_resnet_svm.jl](src/julia/train_base_resnet_svm.jl)
+- Table 2: Regression results in high information elections - [official_analysis.R](src/R/official_analysis.R)
+- Table 3: Regression results in low information elections - [official_analysis.R](src/R/official_analysis.R)
 
+## Replicating Appendix Results: 
+- Table 4: Cross-validated accuracy scores for alternative models - [transfer_analyses.jl(src/julia/transfer_analyses.jl)]
+- Figure 5: Intercoder reliability / Human annotation/MTurk plot - [mturk_analysis.jl](src/julia/mturk_analysis.jl)
+- Table 5: Alternative models with education included - [official_analysis.R](src/R/official_analysis.R)
+- Figure 6: GCS by race and gender - [official_analysis.R](src/R/official_analysis.R)
+
+# Accessing the images and training GCS Vision model from scratch 
 
 ## LOAD KEY UTILITIES/LIBRARIES
 
