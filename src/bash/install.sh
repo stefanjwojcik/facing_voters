@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo apt-get update
+
 #JULIA 
 wget -O julia.tar.gz https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.0-linux-x86_64.tar.gz
 tar -xvzf julia.tar.gz
@@ -25,4 +27,4 @@ sudo apt-get -y install nvidia-utils-470
 #ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 
 # Reboot the server to activate the Nvidia driver
-sudo reboot
+#sudo reboot
