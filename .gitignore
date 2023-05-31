@@ -28,3 +28,4 @@ data/
 images/brazil_images_public/
 images/official_images_data/
 #*.jpg
+.Rproj.user
