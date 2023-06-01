@@ -28,3 +28,7 @@ sudo apt-get -y install nvidia-utils-470
 
 # Reboot the server to activate the Nvidia driver
 #sudo reboot
+
+# Installing python requirements
+# pip freeze >> requirements.txt
+pip install -r requirements.txt
