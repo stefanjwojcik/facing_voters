@@ -1,11 +1,14 @@
 ### A Pluto.jl notebook ###
-# v0.19.25
+# v0.19.26
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 21acdce2-ef98-11ed-3503-6982893a7b42
+begin
 using RCall, DataFrames, PlutoUI, HypertextLiteral
+cd("/home/ubuntu/facing_voters/src/R")
+end
 
 # ╔═╡ ee87aa69-a95a-46e2-a635-2d3ce56870f9
 # Function to show R Plots in line 
@@ -30,6 +33,7 @@ The lines below load R libraries required for the analysis.
 # ╠═╡ show_logs = false
 # Load R libraries 
 R"""
+packrat::packrat_mode()
 library(dplyr)
 library(ggplot2)
 library(lme4)
@@ -38,6 +42,7 @@ library(stargazer)
 library(effects)
 
 library(readr)
+setwd('/home/ubuntu/facing_voters')
 offd = readr::read_csv('../data/data_for_regression.csv')
 offd$race = factor(offd$DS_COR_RACA, labels = unique(offd$DS_COR_RACA)[c(2, 1, 3, 4, 5)])
 
@@ -811,7 +816,7 @@ version = "17.4.0+0"
 # ╟─63c2c72b-8a0b-42c0-a149-95fd7ff8d2a4
 # ╠═a650399d-3f25-491e-973d-7560eb3bdd1e
 # ╟─457a77fa-200b-4f79-a5c8-8528e551dbc4
-# ╠═b2c4f226-82a2-4593-9806-ff3a70c69ec8
+# ╟─b2c4f226-82a2-4593-9806-ff3a70c69ec8
 # ╟─23177860-cb6e-4d52-a927-b4de84d0937f
 # ╟─fc5e206f-b935-460f-b212-f8f77c6dc44d
 # ╠═188a93d9-7a1b-4e69-be04-d14bd8ee1a57
