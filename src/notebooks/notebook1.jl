@@ -43,11 +43,18 @@ library(effects)
 
 library(readr)
 setwd('/home/ubuntu/facing_voters')
-offd = readr::read_csv('../data/data_for_regression.csv')
+offd = readr::read_csv('/home/ubuntu/facing_voters/data/data_for_regression.csv')
 offd$race = factor(offd$DS_COR_RACA, labels = unique(offd$DS_COR_RACA)[c(2, 1, 3, 4, 5)])
 
 print("DONE LOADING LIBRARIES AND DATA.")
 """
+
+# ╔═╡ b41b8e14-2e58-4cb8-ac27-5ed8271c353d
+# Load R libraries 
+#R"""
+#install.packages(c('estimability', 'labeling', 'farver'))
+#print("DONE LOADING LIBRARIES AND DATA.")
+#"""
 
 # ╔═╡ 457a77fa-200b-4f79-a5c8-8528e551dbc4
 PlutoUI.TableOfContents(title="Table of Contents", indent=true)
@@ -279,7 +286,7 @@ RCall = "~0.13.15"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.0"
+julia_version = "1.8.5"
 manifest_format = "2.0"
 project_hash = "71442fb20c21099422578e9fd59a5c955a79ad2e"
 
@@ -338,7 +345,7 @@ version = "4.6.1"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "0.5.2+0"
+version = "1.0.1+0"
 
 [[deps.Conda]]
 deps = ["Downloads", "JSON", "VersionParsing"]
@@ -756,7 +763,7 @@ version = "1.10.1"
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.0"
+version = "1.10.1"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
@@ -815,6 +822,7 @@ version = "17.4.0+0"
 # ╠═21acdce2-ef98-11ed-3503-6982893a7b42
 # ╟─63c2c72b-8a0b-42c0-a149-95fd7ff8d2a4
 # ╠═a650399d-3f25-491e-973d-7560eb3bdd1e
+# ╟─b41b8e14-2e58-4cb8-ac27-5ed8271c353d
 # ╟─457a77fa-200b-4f79-a5c8-8528e551dbc4
 # ╟─b2c4f226-82a2-4593-9806-ff3a70c69ec8
 # ╟─23177860-cb6e-4d52-a927-b4de84d0937f
