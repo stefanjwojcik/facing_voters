@@ -1,6 +1,8 @@
 # Facing Voters: Gender Expression, Gender Stereotypes, and Vote Choice
 Replication of scientific findings of the paper entitled "Facing Voters: Gender Expression, Gender Stereotypes, and Vote Choice"
 
+
+
 ## Replicating Main Paper Results: 
 
 - Figure 1: Histogram of GCS scores - [official_analysis.R](src/R/official_analysis.R)
