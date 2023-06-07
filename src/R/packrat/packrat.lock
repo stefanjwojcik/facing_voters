@@ -630,11 +630,6 @@ Version: 2.1.2
 Hash: b6823f74d6525d39d153620d21e206df
 Requires: tibble
 
-Package: renv
-Source: CRAN
-Version: 0.17.3
-Hash: 77e67d310be184ae95affb159f94e83c
-
 Package: reprex
 Source: CRAN
 Version: 2.0.2
