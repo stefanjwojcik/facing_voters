@@ -1,16 +1,23 @@
 #!/bin/bash
 
+# Install NVIDIA For ubuntu 22.04
+#wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb
+#sudo dpkg -i cuda-keyring_1.0-1_all.deb
+#sudo apt-get update
+#sudo apt-get -y install cuda
+
 sudo apt-get update
 
 #JULIA 
-wget -O julia.tar.gz https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.0-linux-x86_64.tar.gz
+wget -O julia.tar.gz https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz
 tar -xvzf julia.tar.gz
 rm julia.tar.gz
-sudo mv julia-1.8.0 /opt/
-sudo ln -s /opt/julia-1.8.0/bin/julia /usr/local/bin/julia
+sudo mv julia-1.8.5 /opt/
+sudo ln -s /opt/julia-1.8.5/bin/julia /usr/local/bin/julia
 
 # Install R-base
-sudo apt-get -y install r-base
+#sudo apt-get -y install r-base
+#sudo apt-get install r-base-dev=4.1.2
 
 # Install Tensorflow dependencies
 sudo apt-get -y install python3-dev python3-pip python3-venv
@@ -20,8 +27,8 @@ sudo apt-get -y install libblas-dev liblapack-dev libatlas-base-dev gfortran
 pip3 install tensorflow
 
 # Install Nvidia driver and nvidia-smi
-sudo apt-get -y install nvidia-driver-470
-sudo apt-get -y install nvidia-utils-470
+#sudo apt-get -y install nvidia-driver-470
+#sudo apt-get -y install nvidia-utils-470
 
 # Generate SSH key
 #ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
@@ -31,4 +38,4 @@ sudo apt-get -y install nvidia-utils-470
 
 # Installing python requirements
 # pip freeze >> requirements.txt
-pip install -r requirements.txt
+cd src/python && pip install -r requirements.txt
