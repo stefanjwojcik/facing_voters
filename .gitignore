@@ -33,3 +33,4 @@ images/official_images_data/
 # drop all packrat stuff
 src/R/packrat/src/
 packrat/lib*/
+src/notebooks/packrat/
