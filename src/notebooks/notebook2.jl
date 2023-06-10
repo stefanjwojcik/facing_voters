@@ -383,13 +383,6 @@ let
 end 
 
 
-# ╔═╡ 9ca12f89-6c8c-47c3-98d9-739a7ffcb8e2
-md"""
-### GCS Computation
-
-We use the trained, calibrated, SVM to estimate the first few values of the GCS scores. 
-"""
-
 # ╔═╡ Cell order:
 # ╠═889dbca6-5fa2-4474-b6c9-65a40c9b72eb
 # ╠═24fa47b4-a61c-4620-a634-db1c084573dd
