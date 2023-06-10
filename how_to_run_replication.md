@@ -2,10 +2,10 @@
 
 Note: please send a calendar invite to stefan.j.wojcik@gmail.com so he can power on the VM before you begin running the following steps. 
 
-- Using VSCODE,  SSH into the VM (ensure IP address is updated in ~/.ssh/config). The IP address currently is: 
-- Once in the VM, open a terminal, ensure the Bash terminal says `nikolas@[ipaddress]`
-- Type `cd /home/ubuntu/facing_voters` into the Bash terminal.
-- Now type `julia --project=.` and press enter
+- Using VSCODE,  SSH into the VM (ensure IP address is updated in ~/.ssh/config). As a reminder, this means open the Remote Explorer, edit the IP address, hit the refresh button, then hit the arrow to connect. The IP address currently is: ec2-54-208-54-136.compute-1.amazonaws.com
+- Click through any prompts as connecting, then open a terminal. Ensure the Bash terminal says `nikolas@[ipaddress]` so you know you're in the right place.
+- Change the working directory to the project folder. Type `cd /home/ubuntu/facing_voters` into the Bash terminal.
+- Now type `julia --project=.` and press enter. This will start a Julia REPL in the project directory, which will enable all the correct dependencies to be loaded.
 - You should now have a Julia REPL in front of you. 
 - In the Julia REPL, type `using Pluto; Pluto.run()`
 - A web page should automatically open to Pluto. You should see links in that page to [notebook1.jl]() and [notebook2.jl]()
